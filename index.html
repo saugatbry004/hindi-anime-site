@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hindi Anime Hub</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    .anime-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+    .anime-card { background: #222; padding: 10px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.3s; }
+    .anime-card:hover { background: #333; }
+    iframe { width: 100%; height: 500px; margin-top: 20px; border: none; border-radius: 10px; }
+    .search-bar { text-align: center; margin: 20px 0; }
+    input[type="text"] { padding: 10px; width: 80%; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Hindi Anime Hub</h1>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search Hindi anime...">
+  </div>
+  <div class="anime-list" id="animeList"></div>
+  <div id="player"></div>
+
+  <script>
+    async function searchAnime(query) {
+      const res = await fetch(`https://api.consumet.org/anime/gogoanime/${encodeURIComponent(query)}`);
+      const data = await res.json();
+      return data.results || [];
+    }
+
+    async function fetchEpisodeUrl(id) {
+      const res = await fetch(`https://api.consumet.org/anime/gogoanime/watch/${id}`);
+      const data = await res.json();
+      return data.sources?.[0]?.url || null;
+    }
+
+    function renderAnimeList(animeList) {
+      const container = document.getElementById("animeList");
+      container.innerHTML = "";
+      animeList.forEach(anime => {
+        const card = document.createElement("div");
+        card.className = "anime-card";
+        card.innerHTML = `<img src="${anime.image}" width="100%"><p>${anime.title}</p>`;
+        card.onclick = async () => {
+          const url = await fetchEpisodeUrl(anime.episodes[0].id);
+          if (url) {
+            document.getElementById("player").innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
+          } else {
+            alert("Episode not available");
+          }
+        };
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const query = e.target.value + " hindi";
+        const results = await searchAnime(query);
+        renderAnimeList(results);
+      }
+    });
+  </script>
+</body>
+</html>
